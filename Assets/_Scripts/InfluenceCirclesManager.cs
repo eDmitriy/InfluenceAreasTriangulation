@@ -1,0 +1,75 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+
+[ExecuteInEditMode]
+public class InfluenceCirclesManager : MonoBehaviour
+{
+    public int numSides = 32;
+    public static InfluenceCirclesManager _instance;
+
+
+    void OnEnable()
+    {
+        _instance = this;
+    }
+
+    public static int NumSides()
+    {
+        return _instance!=null ? _instance.numSides : 16;
+    }
+
+
+
+    /*    void OnDrawGizmos()
+        {
+            if (InfluenceCircle.allInfluenceCircles.Any(v => v.IsPositionChanged()))
+            {
+                foreach (var circle in InfluenceCircle.allInfluenceCircles )
+                {
+                    circle.DebugDrawPolygon();
+                }
+
+
+                foreach( var circle in InfluenceCircle.allInfluenceCircles )
+                {
+                    List<Vector2> points2D = new List<Vector2>();
+
+                    foreach( Vector3 v3 in circle.points )
+                    {
+                        var v3_local = transform.InverseTransformPoint(v3);
+                        var v2 = new Vector2(v3_local.x, v3_local.z);
+                        points2D.Add( v2 );
+                    }
+
+                    circle.GenerateTriangulation(points2D);
+                }
+            }
+        }*/
+
+
+    public float growDist = 1;
+
+    [ContextMenu( "GrowCircles" )]
+    void GrowCircles()
+    {
+
+        foreach( var circle in InfluenceCircle.allInfluenceCircles )
+        {
+            circle.Grow( growDist );
+        }
+    }
+
+
+
+    [ContextMenu( "GenerateInitial" )]
+    void GenerateInitial()
+    {
+        foreach( var circle in InfluenceCircle.allInfluenceCircles )
+        {
+            circle.GenerateInitial();
+        }
+    }
+}

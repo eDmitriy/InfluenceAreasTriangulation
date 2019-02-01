@@ -10,10 +10,10 @@
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace>
     </RootNamespace>
-    <ProjectGuid>{953D3B5F-C3E5-54F6-A811-F9FC0BC370C8}</ProjectGuid>
+    <ProjectGuid>{B55DBA1C-1C0A-7C30-A06F-B43119FEEEDA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <AssemblyName>Assembly-CSharp-firstpass</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <BaseDirectory>.</BaseDirectory>
@@ -48,7 +48,7 @@
   <PropertyGroup>
     <ProjectTypeGuids>{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <UnityProjectGenerator>Unity/VSTU</UnityProjectGenerator>
-    <UnityProjectType>Game:1</UnityProjectType>
+    <UnityProjectType>GamePlugins:3</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
     <UnityVersion>2018.2.17f1</UnityVersion>
   </PropertyGroup>
@@ -61,16 +61,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\_Scripts\InfluenceCircle.cs" />
-    <Compile Include="Assets\_Scripts\InfluenceCirclesManager.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Circle2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\HalfEdge2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Polygon2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Segment2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Triangle2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Triangulation2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Utils2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Vertex2D.cs" />
+    <Compile Include="Assets\Plugins\Sirenix\Odin Inspector\Scripts\VectorIntFormatters.cs" />
+    <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinInspector.Attributes.xml" />
+    <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.Editor.xml" />
+    <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.xml" />
+    <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Serialization.xml" />
+    <None Include="Assets\Plugins\Sirenix\Assemblies\link.xml" />
+    <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinInspector.Editor.xml" />
+    <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Serialization.Config.xml" />
     <Reference Include="UnityEditor.StandardEvents">
       <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
     </Reference>
@@ -332,12 +330,6 @@
     <Reference Include="Boo.Lang">
       <HintPath>C:/Program Files/Unity/2018.2.17f1/Editor/Data/MonoBleedingEdge/lib/mono/unity/Boo.Lang.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
-      <Project>{B55DBA1C-1C0A-7C30-A06F-B43119FEEEDA}</Project>
-      <Name>Assembly-CSharp-firstpass</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

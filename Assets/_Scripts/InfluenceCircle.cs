@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using mattatz.Triangulation2DSystem;
@@ -353,9 +354,12 @@ public class InfluenceCircle : MonoBehaviour
 
     #endregion
 
-
-    //private Triangulation2D triangulation = null;
-    public List<Vector3> borderPoints = new List<Vector3>();
+    [Serializable]
+    public class BorderPoint
+    {
+        public Vector3 point;
+    }
+    public List<BorderPoint> borderPoints = new List<BorderPoint>();
     //[ContextMenu( "GenerateTriangulation" )]
     public void GenerateTriangulation( List<Vector2> points2D )
     {
@@ -367,15 +371,15 @@ public class InfluenceCircle : MonoBehaviour
 
         #region BorderPoints
 
-        borderPoints = new List<Vector3>();
+        borderPoints = new List<BorderPoint>();
         foreach (Segment2D segment in triangulation.Polygon.Segments )
         {
-            var midPoint2d = segment.Midpoint();
+            var midPoint2d = segment.a.Coordinate;
             Vector3 midPoint3d = new Vector3(midPoint2d.x, 0, midPoint2d.y);
             midPoint3d = transform.TransformPoint(midPoint3d);
             //Debug.DrawRay( midPoint3d, Vector3.up * 20, Color.blue, 10 );
 
-            borderPoints.Add( midPoint3d );
+            borderPoints.Add( new BorderPoint(){point = midPoint3d } );
         }
 
         #endregion
@@ -412,32 +416,65 @@ public class InfluenceCircle : MonoBehaviour
     }
 
 
-    public void Grow(float growDist)
+    public void Grow(float growDist/*, float growPow*/ )
     {
-        List<Vector3> vertices = new List<Vector3>( borderPoints );
-/*        foreach (Vector3 vect in vertices)
-        {
-            Debug.DrawRay(vect, Vector3.up*10, Color.cyan, 10);
-        }*/
+        List<BorderPoint> vertices = new List<BorderPoint>( borderPoints);
+        if( vertices.Count < 1 ) return;
+
 
         //find closest vertex 
-        if( vertices.Count<1 ) return;
-
-        Vector3 closestPoint = vertices.OrderBy(v=>  Vector3.Distance(v, transform.position)).ToList()[0];
+        BorderPoint closestPoint = vertices.OrderBy(v=>  Vector3.Distance(v.point, transform.position)).ToList()[0];
 
 
-        Vector3 closestPoint_Start = closestPoint;
-        Vector3 dirFromCenter = (closestPoint - transform.position).normalized * 1000;
-        closestPoint = Vector3.MoveTowards(closestPoint, closestPoint + dirFromCenter, growDist );
-        vertices[0] = closestPoint;
+        Vector3 closestPoint_Start = closestPoint.point;
+/*        Vector3 dirFromCenter = (closestPoint.point - transform.position).normalized * 1000;
+        closestPoint.point = Vector3.MoveTowards(closestPoint.point, closestPoint.point + dirFromCenter, growDist );*/
+        //vertices[0] = closestPoint;
+        //vertices.Add( closestPoint  + Quaternion.Euler(0,90,0)* dirFromCenter.normalized * growDist );
 
-        Debug.DrawLine((closestPoint), ( closestPoint_Start ), Color.blue, 10);
+
+        var nearPoints = /*vertices*/borderPoints.Where( v => Vector3.Distance( v.point, closestPoint_Start )< growDist ).ToList();
+
+        List<BorderPoint> subdPoints = new List<BorderPoint>();
+        for( var i = 1; i < nearPoints.Count; i++ )
+        {
+            var p1 = nearPoints[i].point;
+            var p2 = nearPoints[i-1].point;
+
+            var pLerp = Vector3.Lerp(p1,p2, 0.5f);
+            pLerp += ( pLerp - transform.position ).normalized * 0.05f;
+
+            //Debug.DrawRay( pLerp, Vector3.up*5, Color.red, 10 );
+
+            int indexOf = borderPoints.IndexOf( nearPoints [ i ] );
+            BorderPoint newBorderPoint = new BorderPoint(){point = pLerp };
+            borderPoints.Insert( indexOf, newBorderPoint );
+            subdPoints.Add(newBorderPoint);
+        }
+
+        foreach (var subdPoint in subdPoints)
+        {
+            nearPoints.Add(subdPoint);
+        }
+
+        foreach (BorderPoint nearPoint in nearPoints)
+        {
+            Vector3 np = nearPoint.point;
+            float distToStartPoint = Vector3.Distance(np, closestPoint_Start);
+            float towardShift = InfluenceCirclesManager.SampleGrowCurve((growDist - distToStartPoint ) / growDist) *growDist;
+            var dirFromCenter = ( np - transform.position ).normalized * towardShift;
+            nearPoint.point += dirFromCenter;
+
+        }
+
+
+
 
 
         List<Vector2> points2D = new List<Vector2>();
-        foreach( Vector3 v3 in vertices )
+        foreach( var v3 in /*vertices*/borderPoints )
         {
-            var v3_local = transform.InverseTransformPoint(v3);
+            var v3_local = transform.InverseTransformPoint(v3.point);
             var v2 = new Vector2(v3_local.x, v3_local.z);
             points2D.Add( v2 );
         }

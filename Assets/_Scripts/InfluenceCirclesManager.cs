@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 
@@ -8,6 +9,7 @@ using UnityEngine;
 public class InfluenceCirclesManager : MonoBehaviour
 {
     public int numSides = 32;
+    public AnimationCurve growCurve = new AnimationCurve();
     public static InfluenceCirclesManager _instance;
 
 
@@ -19,6 +21,13 @@ public class InfluenceCirclesManager : MonoBehaviour
     public static int NumSides()
     {
         return _instance!=null ? _instance.numSides : 16;
+    }
+
+    public static float SampleGrowCurve(float t)
+    {
+        AnimationCurve curve = _instance.growCurve;
+        float m = curve.Evaluate(t);
+        return m;
     }
 
 
@@ -50,21 +59,35 @@ public class InfluenceCirclesManager : MonoBehaviour
         }*/
 
 
+    [Header("Grow")]
+
     public float growDist = 1;
+    //public float growPow = 2;
 
     [ContextMenu( "GrowCircles" )]
+    [Button()]
     void GrowCircles()
     {
-
         foreach( var circle in InfluenceCircle.allInfluenceCircles )
         {
-            circle.Grow( growDist );
+            circle.Grow( growDist/*, growPow*/ );
+        }
+    }
+
+    public int growCount = 10;
+    [Button()]
+    void GrowCircles_NTimes()
+    {
+        for (int i = 0; i < growCount; i++)
+        {
+            GrowCircles();
         }
     }
 
 
 
     [ContextMenu( "GenerateInitial" )]
+    [Button()]
     void GenerateInitial()
     {
         foreach( var circle in InfluenceCircle.allInfluenceCircles )

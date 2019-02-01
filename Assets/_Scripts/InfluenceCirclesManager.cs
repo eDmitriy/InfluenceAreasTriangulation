@@ -9,6 +9,10 @@ using UnityEngine;
 public class InfluenceCirclesManager : MonoBehaviour
 {
     public int numSides = 32;
+    public float segmentSubdDist = 0.3f;
+
+    public float loopWaitTime = 0.3f;
+
     public AnimationCurve growCurve = new AnimationCurve();
     public static InfluenceCirclesManager _instance;
 
@@ -16,12 +20,40 @@ public class InfluenceCirclesManager : MonoBehaviour
     void OnEnable()
     {
         _instance = this;
+
+        if (Application.isPlaying)
+        {
+            StartCoroutine(Loop());
+        }
     }
+
+
+    public int loopTicks = 0;
+    IEnumerator Loop()
+    {
+        loopTicks = 0;
+        while (true)
+        {
+            GrowCircles();
+            loopTicks++;
+
+            yield return new WaitForSeconds( loopWaitTime );
+        }
+    }
+
+
 
     public static int NumSides()
     {
         return _instance!=null ? _instance.numSides : 16;
     }
+    public static float SegementSubdDist()
+    {
+        return _instance != null ?
+            _instance.segmentSubdDist 
+            : 0.3f;
+    }
+
 
     public static float SampleGrowCurve(float t)
     {

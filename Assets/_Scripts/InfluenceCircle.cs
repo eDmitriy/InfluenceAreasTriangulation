@@ -3,13 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using mattatz.Triangulation2DSystem;
+using Poly2Tri;
 using Sirenix.OdinInspector;
 using UnityEngine;
+
 
 [ExecuteInEditMode]
 public class InfluenceCircle : MonoBehaviour
 {
     #region Vars
+    
+    public Transform circleSpawnTr;
 
     public Color lineColor = Color.yellow;
     public Material mat;
@@ -17,6 +21,7 @@ public class InfluenceCircle : MonoBehaviour
     //public int numberOfSides;
     public float polygonRadius;
     public float influence = 1;
+    public int fraction = 1;
     //public Vector2 polygonCenter;
 
 
@@ -26,6 +31,11 @@ public class InfluenceCircle : MonoBehaviour
         public Vector3 pointA;
         public Vector3 pointB;
         public Vector3 normal;
+        //public int fraction;
+        public InfluenceCircle circle;
+
+/*        public BorderPoint nextPoint;
+        public BorderPoint prevPoint;*/
     }
 
     [HideInInspector]
@@ -90,12 +100,12 @@ public class InfluenceCircle : MonoBehaviour
 
     //List<Vector3> points = new List<Vector3>();
 
-    public void DebugDrawPolygon()
+    public void DebugDrawPolygon( Vector3 centerPoint )
     {
-        DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides() );
+        DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides(), centerPoint );
     }
 
-    public List<Vector3> DebugDrawPolygon(  float radius, int numSides, bool raycast=true )
+    public List<Vector3> DebugDrawPolygon(  float radius, int numSides, Vector3 centerPoint, bool raycast=true )
     {
 
         Vector2 startCorner = new Vector2(radius, 0) ;
@@ -112,15 +122,15 @@ public class InfluenceCircle : MonoBehaviour
             // Get the X and Y coordinates of the corner point.
             Vector2 currentCorner = new Vector2(Mathf.Cos(cornerAngle) * radius, Mathf.Sin(cornerAngle) * radius) ;
 
-            Vector3 currCornerV3 = Vector2ToWorldPoint(currentCorner);
+            Vector3 currCornerV3 = Vector2ToWorldPoint( currentCorner, centerPoint );
             if (raycast)
             {
-                Vector3 origin = transform.position;
+/*                Vector3 origin = transform.position;
                 Vector3 dir = (currCornerV3 - origin).normalized;
                 float dist = Raycast(origin, dir, radius);
                 //dist = Mathf.Lerp(dist, lastRadius, 0.5f);
-                currCornerV3 = origin + dir * dist /*( radius - (radius - dist)/2)*/;
-                lastRadius = dist;
+                currCornerV3 = origin + dir * dist /*( radius - (radius - dist)/2)#1#;
+                lastRadius = dist;*/
             }
 
             // Draw a side of the polygon by connecting the current corner to the previous one.
@@ -144,14 +154,14 @@ public class InfluenceCircle : MonoBehaviour
 
     #region Raycast
 
-    private Vector3 Vector2ToWorldPoint( Vector2 currentCorner )
+    private Vector3 Vector2ToWorldPoint( Vector2 currentCorner, Vector3 centerPoint )
     {
-        return transform.position + new Vector3( currentCorner.x, 0, currentCorner.y );
+        return /*transform.position*/centerPoint + new Vector3( currentCorner.x, 0, currentCorner.y );
     }
 
-    List<Vector3> GetCircleDirections()
+/*    List<Vector3> GetCircleDirections()
     {
-        var numSides = InfluenceCirclesManager.NumSides();/*numberOfSides;*/
+        var numSides = InfluenceCirclesManager.NumSides();/*numberOfSides;#1#
         var radius = polygonRadius;
 
         List<Vector3> directions = new List<Vector3>();
@@ -199,7 +209,7 @@ public class InfluenceCircle : MonoBehaviour
         if (circle != null)
         {
             maxDistance = RaycastLine(origin, direction, maxDistance, circle);
-        }*/
+        }#1#
 
         return maxDistance;
     }
@@ -211,7 +221,7 @@ public class InfluenceCircle : MonoBehaviour
 
         Vector3 circlePos = circle.transform.position;
         var dirList = circle.GetCircleDirections();
-        var dirListSorted = dirList/*.OrderBy( v => OrderByAngle( direction, v, origin, circlePos ) ).Take(4).ToList()*/;
+        var dirListSorted = dirList/*.OrderBy( v => OrderByAngle( direction, v, origin, circlePos ) ).Take(4).ToList()#1#;
         List<float> intersectionDistancesList = new List<float>();
 
 
@@ -248,7 +258,7 @@ public class InfluenceCircle : MonoBehaviour
             float min = intersectionDistancesList.Min();
 
 /*            float diff = Vector3.Distance(origin, circlePos ) - min;
-            min = maxDistance - diff;*/
+            min = maxDistance - diff;#1#
 
             return min;
         }
@@ -259,11 +269,11 @@ public class InfluenceCircle : MonoBehaviour
 
     float OrderByAngle(Vector3 direction, Vector3 circleDirection, Vector3 origin, Vector3 circlePos )
     {
-        var dirAngleFromCircle =  Vector3.Angle( circleDirection, origin - circlePos/*, Vector3.up*/ );
-        var dirAngleFromOrigin = Vector3.Angle(direction,  circlePos - origin /*, Vector3.up*/);
+        var dirAngleFromCircle =  Vector3.Angle( circleDirection, origin - circlePos/*, Vector3.up#1# );
+        var dirAngleFromOrigin = Vector3.Angle(direction,  circlePos - origin /*, Vector3.up#1#);
 
         return Mathf.Abs(dirAngleFromCircle - dirAngleFromOrigin);
-    }
+    }*/
 
     #endregion
 
@@ -368,15 +378,29 @@ public class InfluenceCircle : MonoBehaviour
         return ( ( a * b ) >= 0f );
     }
 
-    private float LineCastForGrow( BorderPoint nearPoint, float towardShift,
+
+    public class LineCast_GrowResult
+    {
+        public float dist;
+        public BorderPoint intersectionBP;
+    }
+
+    private LineCast_GrowResult LineCastForGrow( BorderPoint nearPoint, float towardShift, float shiftCorrection,
         Vector3 segmentNormal, List<BorderPoint> allSceneBorderPoints )
     {
         Vector3 desiredPos = nearPoint.pointA + segmentNormal * towardShift;
         Vector2 instersectPoint = Vector2.zero;
         float vectMult = 300f;
 
+        BorderPoint intersectionBP = null;
+
         foreach( var bp in allSceneBorderPoints )
         {
+            if (bp == nearPoint || Vector3.Angle(bp.normal, nearPoint.normal)<90)
+            {
+                continue;
+            }
+
             if( LineIntersection(
                 new Vector2( nearPoint.pointA.x, nearPoint.pointA.z ) * vectMult,
                 new Vector2( desiredPos.x, desiredPos.z ) * vectMult,
@@ -387,18 +411,21 @@ public class InfluenceCircle : MonoBehaviour
             {
                 instersectPoint /= vectMult;
                 float distance = Vector3.Distance(nearPoint.pointA, new Vector3(instersectPoint.x,0,instersectPoint.y)  );
-                if(distance<0.01f) continue;
+                //if(distance<0.01f) continue;
 
-                distance = Mathf.Clamp( distance - 0.2f, 0, float.MaxValue );
+                distance = Mathf.Clamp( distance - shiftCorrection/*0.2f*/, 0, float.MaxValue );
                 towardShift = Mathf.Min( towardShift, distance );
 
                 //Debug.DrawRay( new Vector3( instersectPoint.x, 0, instersectPoint.y ), Vector3.up, Color.magenta, 10 );
-
+                intersectionBP = bp;
                 break;
             }
         }
 
-        return towardShift;
+        return /*towardShift*/new LineCast_GrowResult()
+        {
+            dist = towardShift, intersectionBP = intersectionBP
+        };
     }
 
     #endregion
@@ -427,11 +454,12 @@ public class InfluenceCircle : MonoBehaviour
         /*Polygon2D*/ polygon = Polygon2D.Contour(points2D.ToArray());
 
         // construct Triangulation2D with Polygon2D and threshold angle (18f ~ 27f recommended)
-        Triangulation2D triangulation = new Triangulation2D(polygon, 22.5f);
+        Triangulation2D triangulation = new Triangulation2D(polygon, 5f/*22.5f*/);
 
         #region BorderPoints
 
         borderPoints = new List<BorderPoint>();
+        //BorderPoint prevPoint = null;
         foreach (Segment2D segment in triangulation.Polygon.Segments )
         {
             var pA = segment.a.Coordinate;
@@ -446,12 +474,24 @@ public class InfluenceCircle : MonoBehaviour
             Vector3 segmentVector = (pA_v3-pB_v3).normalized;
             Vector3 segmentNormal = Quaternion.Euler(0, -90, 0) * segmentVector ;
 
+/*            Vector3 nTEst = pA_v3+segmentNormal*0.05f;
+            nTEst = transform.InverseTransformPoint(nTEst);
+            if (triangulation.Polygon.Contains(new Vector2( nTEst.x, nTEst.z ) ))
+            {
+                segmentNormal = Quaternion.Euler( 0, 180, 0 ) * segmentVector;
+            }*/
+            //Debug.DrawRay( pA_v3, segmentNormal, Color.blue, 1.5f );
+
             BorderPoint newBP = new BorderPoint()
             {
                 pointA = pA_v3,
                 pointB = pB_v3,
-                normal = segmentNormal
+                normal = segmentNormal,
+                //fraction = this.fraction,
+                circle = this,
+                //prevPoint = prevPoint
             };
+            //prevPoint = newBP;
             borderPoints.Add( newBP );
         }
 
@@ -517,7 +557,12 @@ public class InfluenceCircle : MonoBehaviour
             .Where(v=>v!=this)
             .SelectMany( v => v.borderPoints ).ToList();
 
-        var notBlocked_BP_Points = vertices.Where(v=> allSceneBorderPoints.All(b=> Vector3.Distance(b.pointA, v.pointA)>0.5f))
+        var notBlocked_BP_Points = vertices
+            .Where(v=>
+                allSceneBorderPoints
+                    .Where(c=>c.circle.fraction!=fraction)
+                    .All(b=> Vector3.Distance(b.pointA, v.pointA)>0.5f)
+                )
             .ToList();
         if(notBlocked_BP_Points.Count==0) return;
 
@@ -548,34 +593,49 @@ public class InfluenceCircle : MonoBehaviour
             #region Normal
 
             Vector3 segmentNormal = nearPoint.normal;
-            if (Vector3.Angle(segmentNormal, averageNormal) > 100)
+/*            if (Vector3.Angle(segmentNormal, averageNormal) > 100)
             {
                 segmentNormal *= -1;
             }
-            averageNormal = Vector3.Lerp(averageNormal, segmentNormal, 0.3f);
+            averageNormal = Vector3.Lerp(averageNormal, segmentNormal, 0.3f);*/
 
             #endregion
 
             //raycast against others
-            towardShift = LineCastForGrow( nearPoint, towardShift, segmentNormal, allSceneBorderPoints );
+            /*towardShift*/var lineCast_growResult = LineCastForGrow(
+                nearPoint, towardShift, 0.2f, segmentNormal, allSceneBorderPoints 
+                );
+            towardShift = lineCast_growResult.dist;
+
+            #region Connect similar fraction circles
+
+            BorderPoint ibp = lineCast_growResult.intersectionBP;
+            if ( ibp!=null && ibp.circle.fraction == fraction)
+            {
+                ConnectTwoCircles( growDist, nearPoint, ibp );
+                break;
+            }
+
+            #endregion
+
             Vector3 newPos = nearPoint.pointA + segmentNormal * towardShift;
-            
-            //raycast against self
-            var selfCollision = LineCastForGrow( nearPoint, towardShift, segmentNormal, growedEdges );
-            if ( selfCollision >0.001f && Mathf.Abs(selfCollision - towardShift) > 0.02f)
+
+
+            #region raycast against self
+
+            var selfCollision = LineCastForGrow( nearPoint, towardShift, 0, segmentNormal, growedEdges ).dist;
+            if (/* selfCollision >0.001f &&*/ Mathf.Abs(selfCollision - towardShift) > 0.002f)
             {
                 borderPoints.Remove( nearPoint );
-                //growedEdges.Remove(nearPoint);
-                //Debug.DrawRay( nearPoint.pointA, Vector3.up, Color.blue, 20 );
-
                 continue;
             }
 
-/*            if ( polygon!=null && polygon.Contains(new Vector2(newPos.x, newPos.z)))
+            var newPosLocal = transform.InverseTransformPoint(newPos);
+            if ( polygon!=null && polygon.Contains(new Vector2( newPosLocal.x, newPosLocal.z) ))
             {
                 borderPoints.Remove( nearPoint );
                 continue;
-            }*/
+            }
 
             growedEdges.Add( new BorderPoint()
             {
@@ -583,6 +643,9 @@ public class InfluenceCircle : MonoBehaviour
                 pointB = newPos
             } );
 
+            #endregion
+
+            
             Debug.DrawRay( nearPoint.pointA + Vector3.up*0.25f, segmentNormal * towardShift, Color.green, 3 );
             
             nearPoint.pointA = newPos;
@@ -592,7 +655,65 @@ public class InfluenceCircle : MonoBehaviour
         GenerateTriangulation();
     }
 
-    
+
+    #region Points order on connection
+
+    private void MakeCorrectOrderOnConnect( InfluenceCircle ibpCircle, BorderPoint lastBP )
+    {
+        //BorderPoint lastBP = borderPoints.Last();
+        Debug.DrawRay( lastBP.pointA + Vector3.up * 0.25f, Vector3.up * 20, Color.blue, 30 );
+
+        while( CheckCorrectOrder( ibpCircle.borderPoints, lastBP ) /*ibpCircle.borderPoints[0] is not closest to last*/)
+        {
+            var intersectionFirstPoint = ibpCircle.borderPoints[0];
+            ibpCircle.borderPoints.Insert( ibpCircle.borderPoints.Count /*- 1*/, intersectionFirstPoint );
+            ibpCircle.borderPoints.RemoveAt(0);
+        }
+    }
+
+    bool CheckCorrectOrder( List<BorderPoint> bpPoints, BorderPoint lastBP )
+    {
+        List<BorderPoint> bplist = new List<BorderPoint>(/*ibpCircle.borderPoints*/bpPoints);
+        BorderPoint cp = bplist.OrderBy(v=>Vector3.Distance(v.pointA, lastBP.pointA)).First();
+        return  bplist.IndexOf( cp ) != 0 ;
+    }
+
+
+    private void ConnectTwoCircles( float growDist, BorderPoint nearPoint, BorderPoint ibp )
+    {
+        InfluenceCircle ibpCircle = ibp.circle;
+
+        List<BorderPoint> intersectPoints = ibpCircle.borderPoints
+            .Where(v=>Vector3.Distance(v.pointA, nearPoint.pointA)<growDist/2).ToList();
+        foreach( var intersectPoint in intersectPoints )
+        {
+            ibpCircle.borderPoints.Remove( intersectPoint );
+        }
+        int indexOf = borderPoints.IndexOf(nearPoint);
+
+        //borderPoints.Remove(nearPoint);
+        intersectPoints = borderPoints
+            .Where( v => Vector3.Distance( v.pointA, nearPoint.pointA ) < growDist / 2 ).ToList();
+        foreach( var intersectPoint in intersectPoints )
+        {
+            borderPoints.Remove( intersectPoint );
+        }
+
+        MakeCorrectOrderOnConnect( ibpCircle, nearPoint );
+        borderPoints.InsertRange( indexOf, ibpCircle.borderPoints );
+
+        /*                foreach( var bp in borderPoints )
+                        {
+                            Debug.DrawRay( bp.pointA, Vector3.up * 1, Color.red, 5 );
+                        }*/
+
+        Destroy( ibpCircle.gameObject );
+    }
+
+
+    #endregion
+
+
 
     private Vector3 CenterOfMass_BorderPoints(  )
     {
@@ -635,7 +756,14 @@ public class InfluenceCircle : MonoBehaviour
             var pLerp = Vector3.Lerp(p1,p2, 0.5f);
 
             int indexOf = i;//borderPoints.IndexOf( bp );
-            BorderPoint newBorderPoint = new BorderPoint(){pointA = pLerp, pointB = p1, normal = borderPoints[i].normal};
+            BorderPoint newBorderPoint = new BorderPoint()
+            {
+                pointA = pLerp,
+                pointB = p1,
+                normal = borderPoints[i].normal,
+                //fraction = borderPoints[i].fraction,
+                circle = borderPoints[i].circle
+            };
             //bp.pointB = pLerp;
             borderPoints.Insert( indexOf, newBorderPoint );
 
@@ -652,7 +780,7 @@ public class InfluenceCircle : MonoBehaviour
     [Button()]
     public void GenerateInitial()
     {
-        var points = DebugDrawPolygon(polygonRadius, InfluenceCirclesManager.NumSides(), false );
+        var points = DebugDrawPolygon(polygonRadius, InfluenceCirclesManager.NumSides(), transform.position, false );
 
 
         List<Vector2> points2D = new List<Vector2>();
@@ -670,7 +798,7 @@ public class InfluenceCircle : MonoBehaviour
     [Button()]
     public void GenerateCircle()
     {
-        var points = DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides(), false );
+        var points = DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides(),transform.position, false );
 
         foreach (Vector3 p in points)
         {
@@ -683,14 +811,14 @@ public class InfluenceCircle : MonoBehaviour
     [Button()]
     public void GenerateCircles_2()
     {
-        var points = DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides(), false );
+        var points = DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides(),transform.position, false );
 
         foreach( Vector3 p in points )
         {
             borderPoints.Add( new BorderPoint() { pointA = p } );
         }
 
-        points = DebugDrawPolygon( polygonRadius * 0.5f, InfluenceCirclesManager.NumSides(), false );
+        points = DebugDrawPolygon( polygonRadius * 0.5f, InfluenceCirclesManager.NumSides(), transform.position, false );
 
         foreach( Vector3 p in points )
         {
@@ -698,6 +826,41 @@ public class InfluenceCircle : MonoBehaviour
         }
 
         GenerateTriangulation();
+    }
+
+
+    [Button()]
+    public void GenerateCircle_AtPoint() //broken
+    {
+        var points = DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides(), circleSpawnTr.position, false );
+        
+        foreach( Vector3 p in points )
+        {
+            borderPoints.Add( new BorderPoint() { pointA = p } );
+        }
+        
+        //GenerateTriangulation();
+    }
+
+
+    [Button()]
+    public void GenerateCircle_Poly2Tri()
+    {
+        var points = DebugDrawPolygon( polygonRadius, InfluenceCirclesManager.NumSides(),transform.position, false );
+
+
+        List<PolygonPoint> polygonPoints = new List<PolygonPoint>();
+        foreach( Vector3 p in points )
+        {
+            polygonPoints.Add( new PolygonPoint( p.x, p.z ) );
+
+            //Debug.DrawRay(p, Vector3.up, Color.white, 10);
+        }
+
+
+        Polygon polygon = new Polygon(polygonPoints);
+        polygon.Precision = /*0.1f*/TriangulationPoint.kVertexCodeDefaultPrecision;
+        Poly2Tri_Test.Triangulate( polygon );
     }
 
     #endregion

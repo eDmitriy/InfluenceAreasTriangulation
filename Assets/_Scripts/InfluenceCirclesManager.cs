@@ -23,6 +23,7 @@ public class InfluenceCirclesManager : MonoBehaviour
 
         if (Application.isPlaying)
         {
+            GenerateInitial();
             StartCoroutine(Loop());
         }
     }
@@ -100,9 +101,10 @@ public class InfluenceCirclesManager : MonoBehaviour
     [Button()]
     void GrowCircles()
     {
-        foreach( var circle in InfluenceCircle.allInfluenceCircles )
+        for (var i = 0; i < InfluenceCircle.allInfluenceCircles.Count; i++)
         {
-            circle.Grow( growDist/*, growPow*/ );
+            var circle = InfluenceCircle.allInfluenceCircles[i];
+            circle.Grow(growDist /*, growPow*/);
         }
     }
 

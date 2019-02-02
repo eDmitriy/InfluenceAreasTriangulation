@@ -315,28 +315,44 @@ namespace mattatz.Triangulation2DSystem {
 			;
 		}
 
-		void Refine (float angle, float threshold)  {
-			while(T.Any(t => !ExternalPSLG(t) && t.Skinny(angle, threshold))) {
-				RefineSubRoutine(angle, threshold);
-			}
-		}
+		void Refine (float angle, float threshold)
+        {
+            while( RefineCheck( angle, threshold ) )
+            {
+                RefineSubRoutine( angle, threshold );
+            }
+        }
 
-		void RefineSubRoutine (float angle, float threshold) {
+        private bool RefineCheck( float angle, float threshold )
+        {
+            for (var i = 0; i < T.Count; i++)
+            {
+                var t = T[i];
+                if (!ExternalPSLG(t) && t.Skinny(angle, threshold)) return true;
+            }
+
+            return false;
+        }
+
+        void RefineSubRoutine (float angle, float threshold) {
 
 			while(true) { 
 				if(!FindAndSplit(threshold)) break; 
 			}
 
 			var skinny = T.Find (t => !ExternalPSLG(t) && t.Skinny(angle, threshold));
-			var p = skinny.Circumcenter();
+            if (skinny != null)
+            {
+                var p = skinny.Circumcenter();
 
-			var segments = S.FindAll(s => s.EncroachedUpon(p));
-			if(segments.Count > 0) {
-				segments.ForEach(s => SplitSegment(s));
-			} else {
-				SplitTriangle(skinny);
-			}
-		}
+                var segments = S.FindAll(s => s.EncroachedUpon(p));
+                if(segments.Count > 0) {
+                    segments.ForEach(s => SplitSegment(s));
+                } else {
+                    SplitTriangle(skinny);
+                }
+            }
+        }
 
 		void SplitTriangle (Triangle2D t) {
 			var c = t.Circumcenter();

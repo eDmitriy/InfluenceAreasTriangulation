@@ -71,6 +71,8 @@
     <Compile Include="Assets\_Scripts\Triangulation\Triangulation2D.cs" />
     <Compile Include="Assets\_Scripts\Triangulation\Utils2D.cs" />
     <Compile Include="Assets\_Scripts\Triangulation\Vertex2D.cs" />
+    <None Include="Assets\Materials\Wireframe.shader" />
+    <None Include="Assets\Materials\Area_Shader.shader" />
     <Reference Include="UnityEditor.StandardEvents">
       <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
     </Reference>
@@ -281,6 +283,9 @@
     <Reference Include="UnityEngine.SpatialTracking">
       <HintPath>C:/Program Files/Unity/2018.2.17f1/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
+    <Reference Include="Poly2Tri">
+      <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/Plugins/Poly2Tri.dll</HintPath>
+    </Reference>
     <Reference Include="Sirenix.OdinInspector.Attributes">
       <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/Plugins/Sirenix/Assemblies/Sirenix.OdinInspector.Attributes.dll</HintPath>
     </Reference>
@@ -304,9 +309,6 @@
     </Reference>
     <Reference Include="UnityEngine.StandardEvents">
       <HintPath>C:/Users/elgin/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.13/UnityEngine.StandardEvents.dll</HintPath>
-    </Reference>
-    <Reference Include="Poly2Tri">
-      <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/Plugins/Poly2Tri.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <HintPath>C:/Program Files/Unity/2018.2.17f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/mscorlib.dll</HintPath>

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -38,18 +39,22 @@ public class Poly2Tri_Test : MonoBehaviour {
     }
 
 
-    public static TriangulationResult Triangulate( Polygon pointSet, Transform rootTransform )
+    public static TriangulationResult Triangulate( Polygon polygon )
     {
         TriangulationResult triangulationResult = new TriangulationResult();
 
-        //pointSet.CalculateWindingOrder();
-        //pointSet.DisplayFlipX = true;
-        P2T.Triangulate( TriangulationAlgorithm.DTSweep, pointSet );
+/*        polygon.WindingOrder = Point2DList.WindingOrderType.CW;
+        polygon.CalculateWindingOrder();*/
 
-        pointSet.CalculateWindingOrder();
+        P2T.Triangulate( TriangulationAlgorithm.DTSweep, polygon );
 
-        float bpDebugShift = 0;
-        foreach( var tri in pointSet.Triangles )
+        polygon.WindingOrder = Point2DList.WindingOrderType.CW;
+        polygon.CalculateWindingOrder();
+        polygon.RemoveDuplicateNeighborPoints();
+
+
+        //float bpDebugShift = 0;
+        foreach( var tri in polygon.Triangles )
         {
             Vector3[] pArr = new Vector3[3];
 
@@ -71,8 +76,8 @@ public class Poly2Tri_Test : MonoBehaviour {
                 bool isBorder = false;
                 //var curPen = penNormal;
                 DTSweepConstraint edge = null;
-                bool isConstrained = tri.GetConstrainedEdgeCCW(tri.Points[i]);
-                bool hasConstrainedEdge = tri.GetEdgeCCW(tri.Points[i], out edge);
+                bool isConstrained = tri./*GetConstrainedEdgeCCW*/GetConstrainedEdgeCW(tri.Points[i]);
+                bool hasConstrainedEdge = tri./*GetEdgeCCW*/GetEdgeCW(tri.Points[i], out edge);
                 if( isConstrained || hasConstrainedEdge )
                 {
                     if( isConstrained && hasConstrainedEdge )
@@ -88,7 +93,7 @@ public class Poly2Tri_Test : MonoBehaviour {
                         //curPen = penErrorCase1;
                         //curPen = penConstrained;
                         color = Color.red;
-                        isBorder = true;
+                        //isBorder = true;
                         //posShift = Vector3.up;
                     }
                     else
@@ -99,24 +104,18 @@ public class Poly2Tri_Test : MonoBehaviour {
                     }
                 }
 
-                int nextIndex = (i < 2 ? i + 1 : 0);
+                //int nextIndex = (i < 2 ? i + 1 : 0);
 
 
 
-                if( isBorder )
+                if( isBorder && edge != null)
                 {
-                    /*                    Debug.DrawLine(
-                                            rootTransform.TransformPoint( pArr [ i ] ) + Vector3.up * bpDebugShift,
-                                            rootTransform.TransformPoint( pArr [ nextIndex ] ) + Vector3.up * bpDebugShift,
-                                            color, 10 );
-
-                                        bpDebugShift += 0.2f;*/
-
+                    
                     triangulationResult.borderPoints.Add(
                         new BorderPoint()
                         {
-                            pointA = /*rootTransform.TransformPoint*/( pArr [ i ] ),
-                            pointB = /*rootTransform.TransformPoint*/( pArr [ nextIndex ] )
+                            pointA =  /*pArr [ i ]*/ new Vector3( edge.EdgeEnd.Xf, 0, edge.EdgeEnd.Yf ),
+                            pointB = /* pArr [ nextIndex ] */ new Vector3( edge.EdgeStart.Xf, 0, edge.EdgeStart.Yf )
                         }
                     );
                 }
@@ -127,10 +126,10 @@ public class Poly2Tri_Test : MonoBehaviour {
 
         }
 
-        triangulationResult.mesh = BuildMesh( triangulationResult.vertices, triangulationResult.triangles, rootTransform );
+        triangulationResult.mesh = BuildMesh( triangulationResult.vertices, triangulationResult.triangles );
 
+        
 
-        OrderBorderPoints( triangulationResult.borderPoints );
         OrderBorderPoints( triangulationResult.borderPoints );
 
         /*        bpDebugShift = 0;
@@ -150,25 +149,163 @@ public class Poly2Tri_Test : MonoBehaviour {
 
     public static void OrderBorderPoints( List<BorderPoint> borderPoints )
     {
-        //List<BorderPoint> borderPoints = triangulationResult.borderPoints;
+        const float maxDist = 0.003f;
+        //int endReachedCounter = 0;
+        List<int> lastBreakedIndexes = new List<int>();
+
         for( int i = 1; i < borderPoints.Count; i++ )
         {
-            var bp = borderPoints[i];
-            var bp_prev = borderPoints[i-1];
+            //var bp_next = borderPoints[i];
+            var bp_curr = borderPoints[i-1];
 
-            if( Vector3.Distance( bp_prev.pointA, bp.pointB ) > 0.01f )
+            if( bp_curr.nextPoint==null 
+                //|| Vector3.Distance( bp_curr.pointB, bp_curr.nextPoint.pointA ) > maxDist 
+                )
             {
-                var nextPb = borderPoints
-                    .OrderBy(v=>Vector3.Distance(v.pointB, bp_prev.pointA ) ).ToList()[0];
-                int indexOf = borderPoints.IndexOf(nextPb);
 
-                borderPoints.RemoveAt( indexOf );
-                borderPoints.Insert( i, nextPb );
+                //if(bpListTemp.Count(v => v != bp_curr && v != bp_next)==0) break;
+
+                BorderPoint newOrdered_Pb = borderPoints
+                    .Where(v =>
+                    {
+                        bool b = false;
+                        b = bp_curr != v;
+                        if (bp_curr.nextPoint != null)
+                        {
+                            b &= bp_curr.nextPoint != v;
+                        }
+
+                        return b;
+                    })
+                    /*.OrderBy(v=> Vector3.Distance(v.pointA, bp_curr.pointB )  )
+                    .First();*/
+                    .FirstOrDefault(v => Vector3.Distance(v.pointA, bp_curr.pointB) < maxDist);
+                //if( newOrdered_Pb ==null) continue;
+                if( newOrdered_Pb == null )
+                {
+                    newOrdered_Pb = borderPoints
+                        .Where( v => bp_curr != v )
+                        .FirstOrDefault( v => Vector3.Distance( v.pointB, bp_curr.pointB ) < maxDist );
+                    if( newOrdered_Pb ==null) continue;
+                    else
+                    {
+                        Vector3 pointB_temp = newOrdered_Pb.pointB;
+                        newOrdered_Pb.pointB = newOrdered_Pb.pointA;
+                        newOrdered_Pb.pointA = pointB_temp;
+
+                        //Debug.Log("Reversed BP");
+                    }
+
+                }
+
+                //if( Vector3.Distance( bp_curr.pointB, newOrdered_Pb.pointA ) > 0.1f ) continue;
+
+                //int indexOf = borderPoints.IndexOf(newOrdered_Pb);
+
+
+
+                #region Swap
+
+/*                List<BorderPoint> borderPoints_sorted = new List<BorderPoint>();
+                //List<int> sortedPointsIndexes = new List<int>();
+                BorderPoint newOrdered_Pb_SequenceItem = newOrdered_Pb;
+                BorderPoint whileStartPoint = newOrdered_Pb.nextPoint;
+                //sortedPointsIndexes.Add(indexOf);
+                borderPoints_sorted.Add( newOrdered_Pb );
+                borderPoints.Remove( newOrdered_Pb );
+
+                while( ( newOrdered_Pb_SequenceItem = newOrdered_Pb_SequenceItem.nextPoint) != null )
+                {
+                    if( newOrdered_Pb_SequenceItem == whileStartPoint) break;
+                    //sortedPointsIndexes.Add( borderPoints.IndexOf( newOrdered_Pb_SequenceItem ) );
+                    borderPoints_sorted.Add( newOrdered_Pb_SequenceItem );
+                    borderPoints.Remove(newOrdered_Pb_SequenceItem);
+
+                }*/
+
+                int indexOf = borderPoints.IndexOf(newOrdered_Pb);
+                Swap( borderPoints, i, indexOf);
+                /*                borderPoints.RemoveAt( indexOf );
+                                borderPoints.Insert( i, newOrdered_Pb );*/
+/*                int indexOf_curr = borderPoints.IndexOf(bp_curr) + 1;
+
+                borderPoints.InsertRange( indexOf_curr, borderPoints_sorted );*/
+/*                for( var index = 0; index < sortedPointsIndexes.Count; index++)
+                {
+                    int sortedPointsIndex = sortedPointsIndexes[index];
+                    int insertIndex = i + index >= borderPoints.Count 
+                        ? (i + index) - borderPoints.Count 
+                        : i + index;
+                    int sortedIndexToInsert = sortedPointsIndex >= borderPoints.Count 
+                        ? sortedPointsIndex - borderPoints.Count 
+                        : sortedPointsIndex;
+
+                    Swap( 
+                        borderPoints,
+                        insertIndex,
+                        sortedIndexToInsert
+                        );
+                }*/
+
+                bp_curr.nextPoint = newOrdered_Pb;
+
+                #endregion
+
+
+
+
+/*                if( lastBreakedIndexes.Count==20 && lastBreakedIndexes.All(v=>v == lastBreakedIndexes[0] ) ) break;
+                else
+                {
+                    if ( lastBreakedIndexes.Count>0 && lastBreakedIndexes.All(v=>v==indexOf))
+                    {
+                        lastBreakedIndexes.Add(indexOf);
+                    }
+                    else
+                    {
+                        lastBreakedIndexes.Clear();
+                        lastBreakedIndexes.Add(indexOf);
+                    }
+                }*/
+
+                i = 0;
             }
         }
     }
 
-    static Mesh BuildMesh( List<Vector3> vertices, List<int> triangles, Transform rooTransform )
+    public static void Swap<T>( IList<T> list, int indexA, int indexB )
+    {
+        if ( indexA> -1 && list.Count > indexA 
+             && indexB >-1 && list.Count > indexB )
+        {
+            T tmp = list[indexA];
+            list [ indexA ] = list [ indexB ];
+            list [ indexB ] = tmp;
+        }
+    }
+
+
+    class DistinctBorderPointComparer : IEqualityComparer<BorderPoint>
+    {
+        #region Implementation of IEqualityComparer<in BorderPoint>
+
+        public bool Equals(BorderPoint bp_1, BorderPoint bp_2)
+        {
+            return bp_1 != null && bp_2!=null 
+                                && Vector3.Distance(bp_1.pointB, bp_2.pointB) < 0.02f;
+        }
+
+        public int GetHashCode(BorderPoint obj)
+        {
+            return /*obj.GetHashCode() ^ *//*obj.pointA.GetHashCode() ^*/ obj.pointB.GetHashCode();
+        }
+
+        #endregion
+    }
+
+
+
+    static Mesh BuildMesh( List<Vector3> vertices, List<int> triangles )
     {
         Mesh mesh = new Mesh();
 

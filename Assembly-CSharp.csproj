@@ -63,14 +63,6 @@
     <Compile Include="Assets\_Scripts\InfluenceCircle.cs" />
     <Compile Include="Assets\_Scripts\InfluenceCirclesManager.cs" />
     <Compile Include="Assets\_Scripts\Poly2Tri_Test.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Circle2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\HalfEdge2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Polygon2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Segment2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Triangle2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Triangulation2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Utils2D.cs" />
-    <Compile Include="Assets\_Scripts\Triangulation\Vertex2D.cs" />
     <None Include="Assets\Materials\Wireframe.shader" />
     <None Include="Assets\Materials\Area_Shader.shader" />
     <Reference Include="UnityEditor.StandardEvents">

@@ -43,14 +43,16 @@ public class Poly2Tri_Test : MonoBehaviour {
     {
         TriangulationResult triangulationResult = new TriangulationResult();
 
-/*        polygon.WindingOrder = Point2DList.WindingOrderType.CW;
-        polygon.CalculateWindingOrder();*/
+        polygon.WindingOrder = Point2DList.WindingOrderType.CW;
+        polygon.CalculateWindingOrder();
+        TriangulationContext context = P2T.CreateContext(TriangulationAlgorithm.DTSweep);
+        polygon.Prepare( context );
 
         P2T.Triangulate( TriangulationAlgorithm.DTSweep, polygon );
 
-        polygon.WindingOrder = Point2DList.WindingOrderType.CW;
+/*        polygon.WindingOrder = Point2DList.WindingOrderType.CW;
         polygon.CalculateWindingOrder();
-        polygon.RemoveDuplicateNeighborPoints();
+        polygon.RemoveDuplicateNeighborPoints();*/
 
 
         //float bpDebugShift = 0;

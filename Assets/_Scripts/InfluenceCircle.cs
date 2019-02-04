@@ -22,6 +22,9 @@ public class InfluenceCircle : MonoBehaviour
     public float polygonRadius;
     public float influence = 1;
     public int fraction = 1;
+
+    public float area = 0;
+
     //public Vector2 polygonCenter;
 
 
@@ -444,6 +447,8 @@ public class InfluenceCircle : MonoBehaviour
     {
         var triangulationResults = Poly2Tri_Test.Triangulate( polygon );
         polygon_triangulated = polygon;
+        area = (float) polygon_triangulated.GetArea();
+
 
         #region BorderPoints
 
@@ -599,22 +604,29 @@ public class InfluenceCircle : MonoBehaviour
 
             int indexOfnearPoint = borderPoints.IndexOf(nearPoint);
 
-            var intersectionBP = LineCastForGrow( nearPoint, towardShift, 0, segmentNormal, growedEdges ).intersectionBP;
+            var intersectionBP = LineCastForGrow( nearPoint, towardShift +0.2f, 0, segmentNormal, growedEdges ).intersectionBP;
             if ( intersectionBP!=null )
             {
 
                 borderPoints.Remove( nearPoint );
-                Debug.DrawRay( nearPoint.pointA, Vector3.up*10, 
-                    Color.magenta, InfluenceCirclesManager._instance.loopWaitTime );
+/*                Debug.DrawRay( nearPoint.pointA, Vector3.up*10, 
+                    Color.magenta, InfluenceCirclesManager._instance.loopWaitTime );*/
 
                 continue;
             }
 
-            //var newPosLocal = transform.InverseTransformPoint(newPos);
+            var newPosLocal = transform.InverseTransformPoint(newPos);
             if ( polygon_triangulated != null 
-                 && polygon_triangulated.IsPointInside( new TriangulationPoint( newPos.x, newPos.z ) ) )
+                 && polygon_triangulated.IsPointInside( new TriangulationPoint( newPosLocal.x, newPosLocal.z ) ) )
             {
                 borderPoints.Remove( nearPoint );
+
+/*                Debug.DrawLine(nearPoint.pointA + Vector3.up*0.1f, newPos + Vector3.up * 0.1f,
+                    Color.magenta, InfluenceCirclesManager._instance.loopWaitTime );
+                Debug.DrawRay( nearPoint.pointA, Vector3.up * 10,
+                    Color.magenta, InfluenceCirclesManager._instance.loopWaitTime );*/
+
+                //Debug.LogError(this);
                 continue;
             }
 
@@ -628,11 +640,13 @@ public class InfluenceCircle : MonoBehaviour
                 pointB = newPos,
                 normal = newGrowedEdgeNormal
             } );
+            segmentVector = (  newPos - nearPoint.pointA ).normalized;
+            newGrowedEdgeNormal = Quaternion.Euler( 0, -90, 0 ) * segmentVector;
             growedEdges.Add( new BorderPoint()
             {
                 pointA = newPos,
                 pointB = nearPoint.pointA,
-                normal = -newGrowedEdgeNormal
+                normal = newGrowedEdgeNormal
             } );
 
             #endregion

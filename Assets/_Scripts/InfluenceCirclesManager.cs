@@ -14,7 +14,11 @@ public class InfluenceCirclesManager : MonoBehaviour
     public float loopWaitTime = 0.3f;
 
     public AnimationCurve growCurve = new AnimationCurve();
+
+    public Transform circleTransf;
+
     public static InfluenceCirclesManager _instance;
+
 
 
     void OnEnable()
@@ -25,6 +29,28 @@ public class InfluenceCirclesManager : MonoBehaviour
         {
             GenerateInitial();
             StartCoroutine(Loop());
+        }
+    }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Plane plane = new Plane(Vector3.up, Vector3.zero);
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            float raycastDist = 0;
+
+            if (plane.Raycast(ray, out raycastDist))
+            {
+                Vector3 point = ray.GetPoint(raycastDist);
+
+                if (circleTransf != null)
+                {
+                    Transform instPrefab = Instantiate(circleTransf, point, Quaternion.identity, transform);
+                    InfluenceCircle circle = instPrefab.GetComponent<InfluenceCircle>();
+                    circle.GenerateInitial();
+                }
+            }
         }
     }
 

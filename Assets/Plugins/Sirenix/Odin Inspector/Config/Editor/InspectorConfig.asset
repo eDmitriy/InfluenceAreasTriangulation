@@ -15,4 +15,6 @@ MonoBehaviour:
   defaultEditorBehaviour: 11
   processMouseMoveInInspector: 1
   drawingConfig:
-    configs: []
+    configs:
+    - DrawnTypeName: InfluenceCircle, Assembly-CSharp
+      EditorTypeName: 

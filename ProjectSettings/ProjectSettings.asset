@@ -571,7 +571,7 @@ PlayerSettings:
   webGLCompressionFormat: 1
   webGLLinkerTarget: 1
   scriptingDefineSymbols:
-    1: ODIN_INSPECTOR
+    1: ODIN_INSPECTOR;EPPZ_GEOMETRY
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}

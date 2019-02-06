@@ -6,9 +6,13 @@ Shader "UnityLibrary/Effects/Wireframe"
 	Properties
 	{
 		_LineColor("LineColor", Color) = (1,1,1,1)
-		_FillColor("FillColor", Color) = (0,0,0,0)
+		_Color("_Color", Color) = (0,0,0,0)
 		_WireThickness("Wire Thickness", RANGE(0, 800)) = 100
+		_ColorTansparency("_ColorTansparency", RANGE(0, 1)) = 1
+
 		[MaterialToggle] UseDiscard("Discard Fill", Float) = 1
+		[MaterialToggle] UseDiscard_Lines("Discard Lines", Float) = 1
+
 	}
 
 		SubShader
@@ -26,6 +30,8 @@ Shader "UnityLibrary/Effects/Wireframe"
 #pragma geometry geom
 #pragma fragment frag
 #pragma multi_compile _ USEDISCARD_ON
+#pragma multi_compile _ USEDISCARD_LINES_ON
+
 #include "UnityCG.cginc"
 
 		float _WireThickness;
@@ -100,21 +106,33 @@ Shader "UnityLibrary/Effects/Wireframe"
 	}
 
 	uniform fixed4 _LineColor;
-	uniform fixed4 _FillColor;
+	uniform fixed4 _Color;
+	float _ColorTansparency;
 
 	fixed4 frag(g2f i) : SV_Target
 	{
 		float minDistanceToEdge = min(i.dist[0], min(i.dist[1], i.dist[2])) * i.dist[3];
+		fixed4 c = _Color;
+		c.a = _ColorTansparency;
 
 		// Early out if we know we are not on a line segment.
 		if (minDistanceToEdge > 0.9)
 		{
-		#ifdef USEDISCARD_ON
+			#ifdef USEDISCARD_ON
 				discard;
-		#else
-				return _FillColor;
-		#endif
+			#else
+				return c;
+			#endif
 		}
+		else 
+		{
+			#ifdef USEDISCARD_LINES_ON
+				return c;
+			#else
+				return _LineColor;
+			#endif
+		}
+
 
 		return _LineColor;
 	}

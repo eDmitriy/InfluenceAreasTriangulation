@@ -259,3 +259,4 @@ MonoBehaviour:
     pointB: {x: 1.6878867, y: 0, z: 5.1380334}
     normal: {x: -0.9238796, y: 0, z: 0.38268298}
     circle: {fileID: 114564850383281086}
+  offset: 0.01

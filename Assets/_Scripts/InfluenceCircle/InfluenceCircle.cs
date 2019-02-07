@@ -35,7 +35,7 @@ public class InfluenceCircle : MonoBehaviour
     public List<BorderPoint> borderPoints = new List<BorderPoint>();
 
 
-    public float offset = 0.0f;
+    public float offset = 0.001f;
 
 /*    public enum UpdateMode { Awake, Update, LateUpdate };
     public UpdateMode update = UpdateMode.Awake;
@@ -45,7 +45,7 @@ public class InfluenceCircle : MonoBehaviour
 
     EPPZ.Geometry.Model.Polygon _polygon;
     EPPZ.Geometry.Model.Polygon _offsetPolygon;
-    EPPZ.Geometry.Model.Polygon polygon { get { return ( offset != 0.0f ) ? _offsetPolygon : _polygon; } }
+    EPPZ.Geometry.Model.Polygon polygon { get { return ( true/*offset != 0.0f*/ ) ? _offsetPolygon : _polygon; } }
 
 
 
@@ -365,17 +365,17 @@ public class InfluenceCircle : MonoBehaviour
     }
 
     private LineCast_GrowResult LineCastForGrow( BorderPoint nearPoint, float towardShift, float shiftCorrection,
-        Vector3 segmentNormal, List<BorderPoint> allSceneBorderPoints )
+        Vector3 segmentNormal, List<BorderPoint> allSceneBorderPoints, bool checkNormals )
     {
         Vector3 desiredPos = nearPoint.pointA + segmentNormal * towardShift;
         Vector2 instersectPoint = Vector2.zero;
-        float vectMult = 10f;
+        float vectMult = 100f;
 
         BorderPoint intersectionBP = null;
 
         foreach( var bp in allSceneBorderPoints )
         {
-            if (bp == nearPoint || Vector3.Angle(bp.normal, nearPoint.normal)<90)
+            if ( checkNormals && bp == nearPoint || Vector3.Angle(bp.normal, nearPoint.normal)<90)
             {
                 continue;
             }
@@ -584,6 +584,7 @@ public class InfluenceCircle : MonoBehaviour
         List< BorderPoint > growedEdges = new List<BorderPoint>(borderPoints);
 
 
+        //GROW
         foreach( BorderPoint nearPoint in growPoints )
         {
             Vector3 np = nearPoint.pointA;
@@ -604,7 +605,7 @@ public class InfluenceCircle : MonoBehaviour
 
             //raycast against others
             /*towardShift*/var lineCast_growResult = LineCastForGrow(
-                nearPoint, towardShift, 0.2f, segmentNormal, allSceneBorderPoints 
+                nearPoint, towardShift, 0.2f, segmentNormal, allSceneBorderPoints, false
                 );
             towardShift = lineCast_growResult.dist;
 
@@ -626,7 +627,8 @@ public class InfluenceCircle : MonoBehaviour
 
             int indexOfnearPoint = borderPoints.IndexOf(nearPoint);
 
-            var intersectionBP = LineCastForGrow( nearPoint, towardShift +0.2f, 0, segmentNormal, growedEdges ).intersectionBP;
+            var intersectionBP = LineCastForGrow( 
+                nearPoint, towardShift +0.2f, 0, segmentNormal, growedEdges, true ).intersectionBP;
             if ( intersectionBP!=null )
             {
 
@@ -637,20 +639,20 @@ public class InfluenceCircle : MonoBehaviour
                 continue;
             }
 
-            var newPosLocal = transform.InverseTransformPoint(newPos);
-            if ( polygon_triangulated != null 
-                 && polygon_triangulated.IsPointInside( new TriangulationPoint( newPosLocal.x, newPosLocal.z ) ) )
+/*            var newPosLocal = transform.InverseTransformPoint(newPos);
+            if ( polygon != null 
+                 && polygon.ContainsPoint( new Vector2( newPosLocal.x, newPosLocal.z ) ) )
             {
                 borderPoints.Remove( nearPoint );
 
 /*                Debug.DrawLine(nearPoint.pointA + Vector3.up*0.1f, newPos + Vector3.up * 0.1f,
                     Color.magenta, InfluenceCirclesManager._instance.loopWaitTime );
                 Debug.DrawRay( nearPoint.pointA, Vector3.up * 10,
-                    Color.magenta, InfluenceCirclesManager._instance.loopWaitTime );*/
+                    Color.magenta, InfluenceCirclesManager._instance.loopWaitTime );#1#
 
                 //Debug.LogError(this);
                 continue;
-            }
+            }*/
 
             #region AddGrowedEdges
 
@@ -727,14 +729,14 @@ public class InfluenceCircle : MonoBehaviour
     private void ConnectTwoCircles( float growDist, BorderPoint nearPoint, BorderPoint ibp )
     {
         InfluenceCircle ibpCircle = ibp.circle;
+        int indexOf = borderPoints.IndexOf(nearPoint);
 
-        List<BorderPoint> intersectPoints = ibpCircle.borderPoints
+/*        List<BorderPoint> intersectPoints = ibpCircle.borderPoints
             .Where(v=>Vector3.Distance(v.pointA, nearPoint.pointA)<growDist/2).ToList();
         foreach( var intersectPoint in intersectPoints )
         {
             ibpCircle.borderPoints.Remove( intersectPoint );
         }
-        int indexOf = borderPoints.IndexOf(nearPoint);
 
         //borderPoints.Remove(nearPoint);
         intersectPoints = borderPoints
@@ -742,15 +744,11 @@ public class InfluenceCircle : MonoBehaviour
         foreach( var intersectPoint in intersectPoints )
         {
             borderPoints.Remove( intersectPoint );
-        }
+        }*/
 
         MakeCorrectOrderOnConnect( ibpCircle, nearPoint );
         borderPoints.InsertRange( indexOf, ibpCircle.borderPoints );
 
-        /*                foreach( var bp in borderPoints )
-                        {
-                            Debug.DrawRay( bp.pointA, Vector3.up * 1, Color.red, 5 );
-                        }*/
 
         Destroy( ibpCircle.gameObject );
     }
@@ -934,25 +932,29 @@ public class InfluenceCircle : MonoBehaviour
     #endregion
 
 
+/*    public float clipperScale = 1000;
+    public float clipperArcTolerance = 10e+3f; // 2 magnitude smaller*/
+
     void UpdateModel()
     {
         // Update polygon model with transforms, also update calculations.
         _polygon = EPPZ.Geometry.Model.Polygon.PolygonWithSource( this );
-        _polygon.UpdatePointPositionsWithSource( this );
+        //_polygon.UpdatePointPositionsWithSource( this );
 
-        if( offset != 0.0f )
+        //if( offset != 0.0f )
         {
-            //Model.Polygon.clipperArcTolerance = clipperArcTolerance;
-            //Model.Polygon.clipperScale = clipperScale;
+/*            EPPZ.Geometry.Model.Polygon.clipperArcTolerance = clipperArcTolerance;
+            EPPZ.Geometry.Model.Polygon.clipperScale = clipperScale;*/
 
-            _offsetPolygon = _polygon.SimplifiedNotRoundedOffsetPolygon(offset); 
+            //_offsetPolygon = _polygon.SimplifiedNotRoundedOffsetPolygon(offset);
+            _offsetPolygon = _polygon.SimplifiedAndRoundedOffsetPolygon( offset );
             //.SimplifiedAndRoundedOffsetPolygon( offset );
         }
 
 
 
         #region Border points
-        
+
 
         borderPoints = new List<BorderPoint>();
         polygon.EnumerateEdgesRecursive( ( Edge eachEdge ) =>
@@ -1016,6 +1018,8 @@ public class InfluenceCircle : MonoBehaviour
 
         #endregion
 
+
+        area = polygon.area;
     }
 
 }

@@ -296,20 +296,20 @@
     <Reference Include="Sirenix.Utilities.Editor">
       <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/Plugins/Sirenix/Assemblies/Sirenix.Utilities.Editor.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.Analytics">
-      <HintPath>C:/Users/elgin/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.16/UnityEngine.Analytics.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.StandardEvents">
-      <HintPath>C:/Users/elgin/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.13/UnityEngine.StandardEvents.dll</HintPath>
-    </Reference>
-    <Reference Include="Poly2Tri">
-      <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/_Scripts/InfluenceCircle/Plugins/Poly2Tri.dll</HintPath>
-    </Reference>
     <Reference Include="clipper_library">
       <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/_Scripts/EPPZ_Geometry/Plugins/Clipper/clipper_library.dll</HintPath>
     </Reference>
     <Reference Include="Triangle">
       <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/_Scripts/EPPZ_Geometry/Plugins/Triangle.NET/Triangle.dll</HintPath>
+    </Reference>
+    <Reference Include="Poly2Tri">
+      <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Assets/_Scripts/InfluenceCircle/Plugins/Poly2Tri.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Analytics">
+      <HintPath>C:/Users/elgin/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.16/UnityEngine.Analytics.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.StandardEvents">
+      <HintPath>C:/Users/elgin/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.13/UnityEngine.StandardEvents.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <HintPath>C:/Program Files/Unity/2018.2.17f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/mscorlib.dll</HintPath>

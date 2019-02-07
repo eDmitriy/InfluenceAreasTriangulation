@@ -566,8 +566,8 @@ namespace EPPZ.Geometry.Model
 	#region Geometry features (Offset)
 
 		// Clipper precision.
-	    public static float clipperScale = 10;//10e+5f;
-	    public static float clipperArcTolerance = 10e+3f; // 2 magnitude smaller
+	    public static float clipperScale = 1000;//10e+5f;
+	    public static float clipperArcTolerance = 100;//10e+3f; // 2 magnitude smaller
 
         // Not simplified, nor rounded.
         public Polygon OffsetPolygon(float offset)
@@ -589,7 +589,7 @@ namespace EPPZ.Geometry.Model
 			// Calculate Polygon-Clipper scale.
 			float maximum = Mathf.Max(bounds.width, bounds.height) + offset * 2.0f + offset;
 			float maximumScale = (float)Int32.MaxValue / maximum;
-			float scale = Mathf.Min(clipperScale, maximumScale);
+		    float scale = Mathf.Min(clipperScale, maximumScale);
 
 
 			// Convert to Clipper.
@@ -601,8 +601,6 @@ namespace EPPZ.Geometry.Model
 					path.Add(new IntPoint(eachPoint.x * scale, eachPoint.y * scale));
 				});
 				paths.Add(path);
-
-			    //Clipper.CleanPolygon(path);
 			}
             foreach (Polygon eachPolygon in polygons)
 			{
@@ -621,13 +619,21 @@ namespace EPPZ.Geometry.Model
 			Paths offsetPaths = new Paths();
 			ClipperOffset clipperOffset = new ClipperOffset();
 			if (rounded) { clipperOffset.ArcTolerance = 0.25 * clipperArcTolerance; } // "The default ArcTolerance is 0.25 units." from http://www.angusj.com/delphi/clipper/documentation/Docs/Units/ClipperLib/Classes/ClipperOffset/Properties/ArcTolerance.htm
-			clipperOffset.AddPaths(paths, joinType, EndType.etClosedPolygon ); 
-			clipperOffset.Execute(ref offsetPaths, (double)offset * scale);
+			clipperOffset.AddPaths(paths, joinType, EndType.etClosedPolygon );
 
-			// Remove self intersections (if requested).
-			if (simplify)
-			{ offsetPaths = Clipper.SimplifyPolygons(offsetPaths ); }
+            /*		    Clipper clipperBase = new Clipper();
+                        clipperBase.StrictlySimple = true;*/
+		    
+            clipperOffset.Execute(ref offsetPaths, (double)offset * scale);
+		    clipperOffset.Clear();
+		    Clipper.CleanPolygon( paths [ 0 ] );
 
+            // Remove self intersections (if requested).
+		    if (simplify)
+		    {
+		        offsetPaths = Clipper.SimplifyPolygons(offsetPaths/*, PolyFillType.pftPositive*/ );
+		    }
+            
 
 			// Convert from Clipper.
 			Polygon offsetPolygon = null;

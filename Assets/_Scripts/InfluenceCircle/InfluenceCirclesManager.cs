@@ -12,9 +12,9 @@ public class InfluenceCirclesManager : MonoBehaviour
     public float segmentSubdDist = 0.3f;
 
     public float loopWaitTime = 0.3f;
+    public int newCircleIterationsCount = 100;
 
     public AnimationCurve growCurve = new AnimationCurve();
-
     public Transform circleTransf;
 
     public static InfluenceCirclesManager _instance;
@@ -27,7 +27,7 @@ public class InfluenceCirclesManager : MonoBehaviour
 
         if (Application.isPlaying)
         {
-            GenerateInitial();
+
             StartCoroutine(Loop());
         }
     }
@@ -48,7 +48,19 @@ public class InfluenceCirclesManager : MonoBehaviour
                 {
                     Transform instPrefab = Instantiate(circleTransf, point, Quaternion.identity, transform);
                     InfluenceCircle circle = instPrefab.GetComponent<InfluenceCircle>();
-                    circle.GenerateInitial();
+
+                    if (circle != null)
+                    {
+                        circle.GenerateInitial();
+
+                        for (int i = 0; i < newCircleIterationsCount; i++)
+                        {
+                            if(circle==null) break;
+                            //circle.GrowAllGrowPoints(growDist);
+                            circle.GrowUniform( growDist );
+
+                        }
+                    }
                 }
             }
         }
@@ -59,6 +71,11 @@ public class InfluenceCirclesManager : MonoBehaviour
     IEnumerator Loop()
     {
         loopTicks = 0;
+
+        yield return 10;
+
+        GenerateInitial();
+
         while (true)
         {
             yield return new WaitForSeconds( loopWaitTime );
@@ -132,7 +149,9 @@ public class InfluenceCirclesManager : MonoBehaviour
         for (var i = 0; i < InfluenceCircle.allInfluenceCircles.Count; i++)
         {
             var circle = InfluenceCircle.allInfluenceCircles[i];
-            circle.Grow(growDist /*, growPow*/);
+            //circle.GrowAllGrowPoints(growDist);
+            circle.GrowUniform( growDist );
+
         }
     }
 

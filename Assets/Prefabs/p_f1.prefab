@@ -95,11 +95,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a05648e210c8a34d8099e896b62dbae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  circleSpawnTr: {fileID: 0}
   lineColor: {r: 0.9245283, g: 0.8500697, b: 0, a: 1}
   mat: {fileID: 2100000, guid: eae5adaf21c024243be8b1899283ee1d, type: 2}
-  polygonRadius: 2
-  influence: 1
+  polygonRadius: 0.1
   fraction: 1
   area: 12.507053
   borderPoints:
@@ -259,4 +257,4 @@ MonoBehaviour:
     pointB: {x: 1.6878867, y: 0, z: 5.1380334}
     normal: {x: -0.9238796, y: 0, z: 0.38268298}
     circle: {fileID: 114564850383281086}
-  offset: 0.01
+  growPoints: []

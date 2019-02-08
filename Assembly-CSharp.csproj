@@ -87,9 +87,7 @@
     <Compile Include="Assets\_Scripts\EPPZ_Geometry\Source\Segment.cs" />
     <Compile Include="Assets\_Scripts\InfluenceCircle\InfluenceCircle.cs" />
     <Compile Include="Assets\_Scripts\InfluenceCircle\InfluenceCirclesManager.cs" />
-    <Compile Include="Assets\_Scripts\InfluenceCircle\Poly2Tri_Test.cs" />
     <None Include="Assets\_Scripts\InfluenceCircle\Materials\Wireframe.shader" />
-    <None Include="Assets\_Scripts\InfluenceCircle\Materials\Area_Shader.shader" />
     <Reference Include="UnityEditor.StandardEvents">
       <HintPath>D:/UnityProjects/2018/InfluenceCircleIntersections/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
     </Reference>

@@ -82,14 +82,27 @@ namespace EPPZ.Geometry.Model
 
 			return rootPolygon;
 		}
+
 	    public static Polygon PolygonWithSource( InfluenceCircle polygonSource )
 	    {
 	        Transform cTr = polygonSource.transform;
+	        List<BorderPoint> borderPoints_1 = polygonSource.borderPoints_subPolygons[0];
 	        Polygon rootPolygon = Polygon.PolygonWithVectorPoints(
-	            polygonSource.borderPoints.Select(v=> cTr.InverseTransformPoint( v.pointA) ).ToArray());
+	            /*polygonSource.*/borderPoints_1.Select(v=> cTr.InverseTransformPoint( v.pointA) ).ToArray());
 
-/*	        // Collect sub-polygons if any.
-	        foreach( Transform eachChildTransform in polygonSource.gameObject.transform )
+	        for (int i = 1; i < polygonSource.borderPoints_subPolygons.Count; i++)
+	        {
+	            List<BorderPoint> borderPoints_N = polygonSource.borderPoints_subPolygons[i];
+	            Polygon subPolygon = PolygonWithVectorPoints(
+	                borderPoints_N
+                        .Select(v=> cTr.InverseTransformPoint( v.pointA) )
+	                    .ToArray()
+	                );
+                rootPolygon.AddPolygon( subPolygon );
+            }
+
+	        // Collect sub-polygons if any.
+/*	        foreach( Transform eachChildTransform in polygonSource.gameObject.transform )
 	        {
 	            GameObject eachChildGameObject = eachChildTransform.gameObject;
 	            Source.Polygon eachChildPolygonSource = eachChildGameObject.GetComponent<Source.Polygon>();
@@ -566,8 +579,8 @@ namespace EPPZ.Geometry.Model
 	#region Geometry features (Offset)
 
 		// Clipper precision.
-	    public static float clipperScale = 1000;//10e+5f;
-	    public static float clipperArcTolerance = 100;//10e+3f; // 2 magnitude smaller
+	    public static float clipperScale = 10000;//10e+5f;
+	    public static float clipperArcTolerance = 10e+3f; // 2 magnitude smaller
 
         // Not simplified, nor rounded.
         public Polygon OffsetPolygon(float offset)
@@ -621,18 +634,16 @@ namespace EPPZ.Geometry.Model
 			if (rounded) { clipperOffset.ArcTolerance = 0.25 * clipperArcTolerance; } // "The default ArcTolerance is 0.25 units." from http://www.angusj.com/delphi/clipper/documentation/Docs/Units/ClipperLib/Classes/ClipperOffset/Properties/ArcTolerance.htm
 			clipperOffset.AddPaths(paths, joinType, EndType.etClosedPolygon );
 
-            /*		    Clipper clipperBase = new Clipper();
-                        clipperBase.StrictlySimple = true;*/
 		    
             clipperOffset.Execute(ref offsetPaths, (double)offset * scale);
 		    clipperOffset.Clear();
-		    Clipper.CleanPolygon( paths [ 0 ] );
+		    //Clipper.CleanPolygon( paths [ 0 ] );
 
             // Remove self intersections (if requested).
 		    if (simplify)
 		    {
-		        offsetPaths = Clipper.SimplifyPolygons(offsetPaths/*, PolyFillType.pftPositive*/ );
-		    }
+		        offsetPaths = Clipper.SimplifyPolygons(offsetPaths );
+            }
             
 
 			// Convert from Clipper.
